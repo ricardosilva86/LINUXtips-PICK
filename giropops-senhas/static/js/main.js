@@ -26,30 +26,30 @@ function showSenhaPorId(id) {
 function copiarParaAreaDeTransferencia() {
   const senhaElemento = document.getElementById("senha");
   navigator.clipboard.writeText(senhaElemento.value).then(
-    () => {
-      alert("Senha copiada para a área de transferência!");
-    },
-    (err) => {
-      alert("Não foi possível copiar a senha: " + err);
-    }
+      () => {
+        alert("Senha copiada para a área de transferência!");
+      },
+      (err) => {
+        alert("Não foi possível copiar a senha: " + err);
+      }
   );
 }
 
 function copiarParaAreaDeTransferenciaPorId(id) {
   const senhaElemento = document.getElementById("senha-" + id);
   navigator.clipboard.writeText(senhaElemento.value).then(
-    () => {
-      alert("Senha copiada para a área de transferência!");
-    },
-    (err) => {
-      alert("Não foi possível copiar a senha: " + err);
-    }
+      () => {
+        alert("Senha copiada para a área de transferência!");
+      },
+      (err) => {
+        alert("Não foi possível copiar a senha: " + err);
+      }
   );
 }
 
 function toggleUsuarios() {
   const listaUsuariosContainer = document.getElementById(
-    "lista-usuarios-container"
+      "lista-usuarios-container"
   );
   listaUsuariosContainer.classList.toggle("hidden");
 }
