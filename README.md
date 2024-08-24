@@ -50,10 +50,15 @@ Este `Dockerfile` é utilizado para criar uma imagem Docker para o projeto de ge
 
 ### Como Construir a Imagem
 
-Para construir a imagem Docker, execute o seguinte comando no terminal, no diretório onde o `Dockerfile` está localizado:
+Para construir a imagem Docker, execute a seguinte `task` do `Taskfile`:
 
 ```sh
-docker build -t <your_image_name> .
+task build-docker-image:<tag>
+```
+Esse comando irá fazer o build da imagem Docker com a tag especificada. Ex:
+
+```sh
+task build-docker-image:1.0
 ```
 
 ## Como Executar 🚀
@@ -68,15 +73,10 @@ docker build -t <your_image_name> .
    cd LINUXtips-PICK
    ```
 
-3. Instale as dependências:
-   ```sh
-   pip install -r requirements.txt
-   ```
-
-4. Execute a aplicação:
-   ```sh
-   python app.py
-   ```
+3. Execute a task de execução do projeto (com Docker Compose):
+    ```sh
+    task executar
+    ```
 
 ## Como Contribuir 🤝
 
