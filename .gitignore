@@ -1,0 +1,4 @@
+/.env
+/.task/checksum/
+/.task/
+/.env-docker

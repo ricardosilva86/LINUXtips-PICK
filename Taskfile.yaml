@@ -1,0 +1,85 @@
+version: '3'
+
+env:
+  IMAGE_NAME: giropops-senhas
+  REGISTRY_USER: ricardosilva86
+  COSIGN_KEY_PATH: ./chaves/desafio-pick
+
+dotenv: [ .env, .env-docker ]
+
+tasks:
+  gerar-env:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      COSIGN_PASSWORD:
+        sh: cat /dev/urandom | tr -dc 'a-zA-Z0-9#@!$%&*' | head -c 24
+    cmds:
+      - echo "COSIGN_PASSWORD='{{.COSIGN_PASSWORD}}'" > .env
+    silent: true
+
+  gerar-chave-cosign:
+    dir: '{{.TASKFILE_DIR}}'
+    dotenv: [ .env ]
+    preconditions:
+      - test -f .env
+    sources:
+      - ./chaves/desafio-pick.key
+      - ./chaves/desafio-pick.pub
+    generates:
+      - ./chaves/desafio-pick.key
+      - ./chaves/desafio-pick.pub
+    cmds:
+      - cosign generate-key-pair --output-key-prefix {{.COSIGN_KEY_PATH}}
+    silent: true
+    status:
+      - test -f {{.COSIGN_KEY_PATH}}.key
+      - test -f {{.COSIGN_KEY_PATH}}.pub
+
+  assinar-image:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+        TAG: '{{index .MATCH 0}}'
+    cmds:
+      - cosign sign --yes --key {{.COSIGN_KEY_PATH}}.key ${IMAGE_NAME}:{{.TAG}}
+
+  build-docker-image:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      TAG: '{{index .MATCH 0}}'
+    cmds:
+      - docker build -t ${IMAGE_NAME}:{{.TAG}} .
+
+  push-docker-image:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      TAG: '{{index .MATCH 0}}'
+    preconditions:
+      - sh: docker login -u {{.REGISTRY_USER}} --password-stdin <<< ${DOCKER_TOKEN}
+    cmds:
+      - docker tag {{.IMAGE_NAME}}:{{.TAG}} {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
+      - docker push {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
+
+  gerar-chave-melange:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen
+
+  melange-build:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker run --privileged --rm -v "${PWD}":/work cgr.dev/chainguard/melange build melange.yaml --arch amd64 --signing-key melange.rsa
+
+  apko-build:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      IMAGE_NAME: '{{index .MATCH 0}}'
+      TAG: '{{index .MATCH 1}}'
+    cmds:
+      - docker run --rm --workdir /work -v ${PWD}:/work cgr.dev/chainguard/apko build apko.yaml {{.IMAGE_NAME}}:{{.TAG}} {{.IMAGE_NAME}}.tar --arch host
+
+  build-helm-chart:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      CHART_PATH: '{{index .MATCH 0}}'
+    cmds:
+      - helm package {{.CHART_PATH}}
