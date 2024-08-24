@@ -1,0 +1,28 @@
+services:
+  giropops-senhas:
+    image: giropops-senhas-test:1.1
+    ports:
+      - "5000:5000"
+    networks:
+      - giropops-senhas
+    volumes:
+     - data:/data
+
+    environment:
+      REDIS_HOST: redisdb
+
+  redisdb:
+    image: cgr.dev/chainguard/redis:latest
+
+    networks:
+      - giropops-senhas
+
+    volumes:
+      - data:/data
+
+networks:
+  giropops-senhas:
+    driver: bridge
+
+volumes:
+  data:
