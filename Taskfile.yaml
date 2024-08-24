@@ -6,7 +6,7 @@ env:
   REGISTRY_USER: ricardosilva86
   COSIGN_KEY_PATH: ./chaves/desafio-pick
 
-dotenv: [ .env ]
+dotenv: [ .env, .env-docker ]
 
 tasks:
   gerar-env:
@@ -55,7 +55,7 @@ tasks:
     vars:
       TAG: '{{index .MATCH 0}}'
     preconditions:
-      - sh: docker login -u {{.REGISTRY_USER}} --password-stdin < .env-docker
+      - sh: docker login -u {{.REGISTRY_USER}} --password-stdin <<< ${DOCKER_TOKEN}
     cmds:
       - docker tag {{.IMAGE_NAME}}:{{.TAG}} {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
       - docker push {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
