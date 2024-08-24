@@ -10,6 +10,12 @@ env:
 dotenv: [ .env ]
 
 tasks:
+
+  executar:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker compose up -d
+
   gerar-env:
     dir: '{{.TASKFILE_DIR}}'
     vars:
