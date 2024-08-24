@@ -1,0 +1,59 @@
+version: '3'
+
+env:
+  REGISTRY_PORT: 5000
+  IMAGE_NAME: giropops-senhas
+  PUBLIC_REGISTRY: hub.docker.io
+
+tasks:
+  gerar-chave-cosign:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - cosign generate-key-pair --output-key-prefix='cosign' --output-file desafio-pick
+
+  assinar-image:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+        TAG: '{{index .MATCH 0}}'
+    cmds:
+      - cosign sign -key cosign.key ${IMAGE_NAME}:{{.TAG}}
+
+  build-docker-image:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      TAG: '{{index .MATCH 0}}'
+    cmds:
+      - docker build -t ${IMAGE_NAME}:{{.TAG}} .
+
+  push-docker-image:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      TAG: '{{index .MATCH 0}}'
+    cmds:
+      - docker tag ${IMAGE_NAME}:{{.TAG}} ${PUBLIC_REGISTRY}/${IMAGE_NAME}:{{.TAG}}
+      - docker push ${PUBLIC_REGISTRY}/${IMAGE_NAME}:{{.TAG}}
+
+  gerar-chave-melange:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen
+
+  melange-build:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker run --privileged --rm -v "${PWD}":/work cgr.dev/chainguard/melange build melange.yaml --arch amd64 --signing-key melange.rsa
+
+  apko-build:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      IMAGE_NAME: '{{index .MATCH 0}}'
+      TAG: '{{index .MATCH 1}}'
+    cmds:
+      - docker run --rm --workdir /work -v ${PWD}:/work cgr.dev/chainguard/apko build apko.yaml {{.IMAGE_NAME}}:{{.TAG}} {{.IMAGE_NAME}}.tar --arch host
+
+  build-helm-chart:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      CHART_PATH: '{{index .MATCH 0}}'
+    cmds:
+      - helm package {{.CHART_PATH}}
