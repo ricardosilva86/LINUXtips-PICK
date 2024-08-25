@@ -9,10 +9,32 @@ dotenv: [ .env, .env-docker ]
 
 tasks:
 
+  instalar-pre-reqs:
+    dir: '{{.TASKFILE_DIR}}'
+    preconditions:
+      - sh: command -v brew
+        msg: "Homebrew não está instalado. Por favor, instale-o antes de prosseguir. Visite https://brew.sh para mais informações."
+      - sh: command -v docker
+        msg: "Docker não está instalado. Por favor, instale-o antes de prosseguir. Visite https://docs.docker.com/get-docker/ para mais informações. Se você estiver no macOS ou no Linux, simplesmente execute o comando curl -fsSL get.docker.com | sh"
+    cmds:
+      - brew install git
+      - brew install go@1.23
+      - brew install go-task
+      - brew install helm@3
+      - brew install cosign
+      - brew install kubernetes-cli@1.31
+      - docker image pull cgr.dev/chainguard/melange:latest
+      - docker image pull cgr.dev/chainguard/apko:latest
+
   run:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
       - docker compose up -d
+
+  stop:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker compose down
 
   gerar-env:
     dir: '{{.TASKFILE_DIR}}'
