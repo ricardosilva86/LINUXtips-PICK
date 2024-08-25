@@ -2,10 +2,10 @@ version: '3'
 
 env:
   IMAGE_NAME: giropops-senhas
-  REGISTRY_OWNER: ricardolopes86
+  REGISTRY_USER: ricardosilva86
   COSIGN_KEY_PATH: ./chaves/desafio-pick
 
-dotenv: [ .env ]
+dotenv: [ .env, .env-docker ]
 
 tasks:
 
@@ -77,13 +77,15 @@ tasks:
     cmds:
       - docker build -t ${IMAGE_NAME}:{{.TAG}} .
 
-  push-docker-image:
+  push-docker-image:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       TAG: '{{index .MATCH 0}}'
+    preconditions:
+      - sh: docker login -u {{.REGISTRY_USER}} --password-stdin <<< ${DOCKER_TOKEN}
     cmds:
-      - docker tag ${IMAGE_NAME}:{{.TAG}} ${PUBLIC_REGISTRY}/${IMAGE_NAME}:{{.TAG}}
-      - docker push ${PUBLIC_REGISTRY}/${IMAGE_NAME}:{{.TAG}}
+      - docker tag {{.IMAGE_NAME}}:{{.TAG}} {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
+      - docker push {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
 
   gerar-chave-melange:
     dir: '{{.TASKFILE_DIR}}'
