@@ -1,4 +1,5 @@
 /.env
-/.task/checksum/
-/.task/
 /.env-docker
+/.task/
+/.task/checksum/
+/chaves/
