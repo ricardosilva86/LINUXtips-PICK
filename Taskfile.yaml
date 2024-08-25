@@ -1,9 +1,7 @@
 version: '3'
 
 env:
-  REGISTRY_PORT: 5000
   IMAGE_NAME: giropops-senhas
-  PUBLIC_REGISTRY: hub.docker.io
   REGISTRY_OWNER: ricardolopes86
   COSIGN_KEY_PATH: ./chaves/desafio-pick
 
