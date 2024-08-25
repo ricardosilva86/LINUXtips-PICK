@@ -105,7 +105,25 @@ tasks:
     cmds:
       - docker run --rm --workdir /work -v ${PWD}:/work cgr.dev/chainguard/apko build apko.yaml {{.IMAGE_NAME}}:{{.TAG}} {{.IMAGE_NAME}}.tar --arch host
 
-  build-helm-chart:*:
+  instalar-helm:*:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      RELEASE_NAME: '{{index .MATCH 0}}'
+      RELEASE_NAMESPACE: '{{index .MATCH 1}}'
+      CHART_PATH: 'giropops-senhas-chart'
+    cmds:
+      - helm install {{.RELEASE_NAME}} --create-namespace --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
+
+  atualizar-helm:*:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      RELEASE_NAME: '{{index .MATCH 0}}'
+      RELEASE_NAMESPACE: '{{index .MATCH 1}}'
+      CHART_PATH: 'giropops-senhas-chart'
+    cmds:
+      - helm upgrade {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
+
+  empacotar-helm:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       CHART_PATH: '{{index .MATCH 0}}'
