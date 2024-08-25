@@ -91,12 +91,12 @@ brew install go@1.20
 Para facilitar o processo, eu deixei uma task pronta para instalar todas as ferramentas necessárias, basta executar o seguinte comando:
 
 ```sh
-task pre-reqs
+task instalar-pre-reqs
 ```
 
 > DISCLAIMER 0: O `Homebrew` precisa estar instalado no seu sistema para que a task `pre-reqs` funcione.  
 
-> DISCLAIMER 1: A task `pre-reqs` foi testada apenas no macOS, mas deve funcionar no Linux também.
+> DISCLAIMER 1: A task `instalar-pre-reqs` foi testada apenas no Linux, mas deve funcionar no macOS também.
 
 ## Dockerfile
 
@@ -152,8 +152,16 @@ task build-docker-image:1.0
 
 3. Execute a task de execução do projeto (com Docker Compose):
     ```sh
-    task executar
+    task run
     ```
+   
+4. Acesse a aplicação no navegador:
+- [http://localhost:5000](http://localhost:5000)
+
+5. Para parar a execução do projeto, execute a task:
+    ```sh
+    task stop
+   ```
 
 ## Como Contribuir 🤝
 
