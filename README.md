@@ -21,6 +21,83 @@ Este projeto é um gerador de senhas desenvolvido com Python e JavaScript. Ele p
 - Visualizar e copiar senhas geradas 📋
 - Listar as últimas senhas geradas 📜
 
+## Pré Requisitos ✅
+
+Algumas ferramentas são necessárias para executar o projeto. São elas:
+- `Golang`:
+  - [Instalação do Golang](https://golang.org/doc/install)
+- `Docker`:
+  - [Instalação do Docker](https://docs.docker.com/get-docker/)
+  - Ou simplesmente execute o comando abaixo:
+    ```sh
+    curl -fsSL https://get.docker.com | sh
+    ```
+- `Docker Compose`:
+  - Se o Docker estiver instalado, o Compose já estará disponível.
+- `Taskfile`:
+    - [Instalação do Taskfile](https://taskfile.dev/installation/)
+    - Ou usando o `Homebrew`:
+      ```sh
+      brew install go-task
+      ```
+- `Git`:
+  - [Instalação do Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- `melange`:
+  - o `melange` será usado como container, portanto basta fazer o pull da imagem:
+    ```sh
+    docker pull cgr.dev/chainguard/melange:latest
+    ```
+- `apko`:
+  - o `apko` será usado como container, portanto basta fazer o pull da imagem:
+    ```sh
+    docker pull cgr.dev/chainguard/apko:latest
+    ```
+- `cosign`:
+  - [Instalação do Cosign](https://docs.sigstore.dev/system_config/installation/)
+  - a forma mais fácil de instalar o cosign é através do `go`:
+    ```sh
+    go install sigstore.dev/cosign/cmd/cosign@latest
+    ```
+- `helm`:
+  - [Instalação do Helm](https://helm.sh/docs/intro/install/)
+- `kubectl`:
+  - [Instalação do Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+
+### Usando o Homebrew (macOS e Linux)
+O Homebrew é um gerenciador de pacotes que pode ser usado tanto no macOS quanto no Linux. Para instalar o Homebrew, execute o seguinte comando:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+Assim que o Homebrew estiver instalado, você pode instalar o `Taskfile` com o seguinte comando:
+
+```sh
+brew install go-task/tap/go-task
+```
+
+Assim como a maioria das ferramentas listadas no pré-requisitos, pode-se usar o Homebrew para instalar cada uma delas. Para instalar o `go`, basta executar o seguinte comando:
+
+```sh
+brew install go
+```
+Caso você deseje uma versão específica (como a versão 1.20), pode instalá-la com o seguinte comando:
+
+```sh
+brew install go@1.20
+```
+
+### Usando a automaćão de instalação dos pré-requisitos
+
+Para facilitar o processo, eu deixei uma task pronta para instalar todas as ferramentas necessárias, basta executar o seguinte comando:
+
+```sh
+task pre-reqs
+```
+
+> DISCLAIMER 0: O `Homebrew` precisa estar instalado no seu sistema para que a task `pre-reqs` funcione.  
+
+> DISCLAIMER 1: A task `pre-reqs` foi testada apenas no macOS, mas deve funcionar no Linux também.
+
 ## Dockerfile
 
 Este `Dockerfile` é utilizado para criar uma imagem Docker para o projeto de gerador de senhas. A imagem é baseada em Python e utiliza o Flask para servir a aplicação.
