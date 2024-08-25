@@ -11,7 +11,7 @@ dotenv: [ .env ]
 
 tasks:
 
-  executar:
+  run:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
       - docker compose up -d
