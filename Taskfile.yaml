@@ -11,7 +11,7 @@ dotenv: [ .env ]
 
 tasks:
 
-  install-pre-reqs:
+  instalar-pre-reqs:
     dir: '{{.TASKFILE_DIR}}'
     preconditions:
       - sh: command -v brew
@@ -32,6 +32,11 @@ tasks:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
       - docker compose up -d
+
+  stop:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - docker compose down
 
   gerar-env:
     dir: '{{.TASKFILE_DIR}}'
