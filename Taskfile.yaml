@@ -123,6 +123,13 @@ tasks:
     cmds:
       - helm upgrade {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
 
+  configurar-ngrok:
+    dir: '{{.TASKFILE_DIR}}'
+    dotenv: [ .env-ngrok ]
+    cmds:
+      - helm repo add ngrok https://ngrok.github.io/kubernetes-ingress-controller
+      - helm install ngrok-ingress-controller ngrok/kubernetes-ingress-controller --namespace ngrok-ingress-controller --create-namespace --set credentials.apiKey=${NGROK_API_KEY} --set credentials.authtoken=${NGROK_AUTHTOKEN}
+
   empacotar-helm:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
