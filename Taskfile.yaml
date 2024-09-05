@@ -3,7 +3,7 @@ version: '3'
 env:
   IMAGE_NAME: giropops-senhas
   REGISTRY_USER: ricardosilva86
-  COSIGN_KEY_PATH: ./chaves/desafio-pick
+  COSIGN_KEY_PATH: ./desafio-pick
 
 dotenv: [ .env, .env-docker ]
 
@@ -17,6 +17,7 @@ tasks:
       - sh: command -v docker
         msg: "Docker não está instalado. Por favor, instale-o antes de prosseguir. Visite https://docs.docker.com/get-docker/ para mais informações. Se você estiver no macOS ou no Linux, simplesmente execute o comando curl -fsSL get.docker.com | sh"
     cmds:
+      - echo "Instalando pré-requisitos..."
       - brew install git
       - brew install go@1.23
       - brew install go-task
@@ -29,52 +30,63 @@ tasks:
   run:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
+      - echo "Iniciando aplicação..."
       - docker compose up -d
 
   stop:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
+      - echo "Parando aplicação..."
       - docker compose down
 
   gerar-env:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       COSIGN_PASSWORD:
-        sh: cat /dev/urandom | tr -dc 'a-zA-Z0-9#@!$%&*' | head -c 24
+        sh: export LC_CTYPE=c; cat /dev/urandom | tr -dc 'a-zA-Z0-9-!@#$%&*_+' | fold -w 24 | head -n1
     cmds:
+      - echo "Gerando senha para o Cosign..."
       - echo "COSIGN_PASSWORD='{{.COSIGN_PASSWORD}}'" > .env
     silent: true
+    status:
+      - test -f .env
 
   gerar-chave-cosign:
     dir: '{{.TASKFILE_DIR}}'
+    deps:
+      - gerar-env
     dotenv: [ .env ]
     preconditions:
       - test -f .env
-    sources:
-      - ./chaves/desafio-pick.key
-      - ./chaves/desafio-pick.pub
-    generates:
-      - ./chaves/desafio-pick.key
-      - ./chaves/desafio-pick.pub
     cmds:
-      - cosign generate-key-pair --output-key-prefix {{.COSIGN_KEY_PATH}}
+      - echo "Gerando chaves do Cosign..."
+      - cosign generate-key-pair --output-key-prefix $COSIGN_KEY_PATH
     silent: true
     status:
-      - test -f {{.COSIGN_KEY_PATH}}.key
-      - test -f {{.COSIGN_KEY_PATH}}.pub
+      - test -f $COSIGN_KEY_PATH.key
+      - test -f $COSIGN_KEY_PATH.pub
 
-  assinar-image:*:
+  assinar-imagem:*:
+    deps:
+      - gerar-chave-cosign
+    dotenv:
+      - .env
+      - .env-docker
     dir: '{{.TASKFILE_DIR}}'
     vars:
         TAG: '{{index .MATCH 0}}'
+    preconditions:
+      - sh: docker login -u {{.REGISTRY_USER}} --password-stdin <<< ${DOCKER_TOKEN}
     cmds:
-      - cosign sign --yes --key {{.COSIGN_KEY_PATH}}.key ${IMAGE_NAME}:{{.TAG}}
+      - echo "Assinando imagem..."
+      - cosign sign --yes --key {{.COSIGN_KEY_PATH}}.key ${REGISTRY_USER}/${IMAGE_NAME}:{{.TAG}}
 
   build-docker-image:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       TAG: '{{index .MATCH 0}}'
     cmds:
+      - echo "Construindo imagem Docker..."
       - docker build -t ${IMAGE_NAME}:{{.TAG}} .
 
   push-docker-image:*:
@@ -84,8 +96,12 @@ tasks:
     preconditions:
       - sh: docker login -u {{.REGISTRY_USER}} --password-stdin <<< ${DOCKER_TOKEN}
     cmds:
+      - task: gerar-chave-cosign
+      - task: build-docker-image:{{.TAG}}
+      - echo "Fazendo o push da imagem Docker..."
       - docker tag {{.IMAGE_NAME}}:{{.TAG}} {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
       - docker push {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
+      - task: assinar-imagem:{{.TAG}}
 
   gerar-chave-melange:
     dir: '{{.TASKFILE_DIR}}'
@@ -105,7 +121,32 @@ tasks:
     cmds:
       - docker run --rm --workdir /work -v ${PWD}:/work cgr.dev/chainguard/apko build apko.yaml {{.IMAGE_NAME}}:{{.TAG}} {{.IMAGE_NAME}}.tar --arch host
 
-  build-helm-chart:*:
+  instalar-helm:*:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      RELEASE_NAME: '{{index .MATCH 0}}'
+      RELEASE_NAMESPACE: '{{index .MATCH 1}}'
+      CHART_PATH: 'giropops-senhas-chart'
+    cmds:
+      - helm install {{.RELEASE_NAME}} --create-namespace --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
+
+  atualizar-helm:*:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      RELEASE_NAME: '{{index .MATCH 0}}'
+      RELEASE_NAMESPACE: '{{index .MATCH 1}}'
+      CHART_PATH: 'giropops-senhas-chart'
+    cmds:
+      - helm upgrade {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
+
+  configurar-ngrok:
+    dir: '{{.TASKFILE_DIR}}'
+    dotenv: [ .env-ngrok ]
+    cmds:
+      - helm repo add ngrok https://ngrok.github.io/kubernetes-ingress-controller
+      - helm install ngrok-ingress-controller ngrok/kubernetes-ingress-controller --namespace ngrok-ingress-controller --create-namespace --set credentials.apiKey=${NGROK_API_KEY} --set credentials.authtoken=${NGROK_AUTHTOKEN}
+
+  empacotar-helm:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       CHART_PATH: '{{index .MATCH 0}}'

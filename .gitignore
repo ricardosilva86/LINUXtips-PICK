@@ -1,4 +1,8 @@
 /.env
-/.task/checksum/
-/.task/
 /.env-docker
+/.env-ngrok
+/.task/
+/.task/checksum/
+/chaves/
+/desafio-pick.key
+/desafio-pick.pub
