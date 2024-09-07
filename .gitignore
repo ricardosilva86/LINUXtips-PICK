@@ -6,3 +6,11 @@
 /chaves/
 /desafio-pick.key
 /desafio-pick.pub
+/packages/
+/giropops-senhas-chart-0.1.0.tgz
+/.idea/
+/melange.rsa
+/melange.rsa.pub
+/giropops-senhas-chart/charts/redis-20.0.5.tgz
+/sbom-index.spdx.json
+/sbom-x86_64.spdx.json
