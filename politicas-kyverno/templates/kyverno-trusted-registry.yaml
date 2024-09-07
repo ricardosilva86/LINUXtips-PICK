@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: allow-specific-images
+spec:
+  validationFailureAction: Audit
+  background: false
+  rules:
+    - name: allow-dockerhub-image
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Only specific images from DockerHub are allowed."
+        pattern:
+          spec:
+            containers:
+              - image: ".*ricardosilva86/giropops-senhas*"
+    - name: allow-bitnami-image
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Only specific images from Bitnami are allowed."
+        pattern:
+          spec:
+            containers:
+              - image: ".*bitnami/redis-cluster*"

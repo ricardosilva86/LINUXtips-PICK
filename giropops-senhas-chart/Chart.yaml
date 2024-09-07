@@ -3,8 +3,8 @@ name: giropops-senhas-chart
 description: O Helm chart para a aplicação de senhas do Giropops
 dependencies:
   - name: redis
-    repository: "https://cgr.dev/chainguard/redis-cluster-bitnami"
-    version: "7.4.0"
+    repository: https://charts.bitnami.com/bitnami
+    version: 20.0.5
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "1.0.0"

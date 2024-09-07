@@ -2,10 +2,24 @@
 
 Repositório para o desafio do PICK 2024 🏆
 
+## Índice 📑
+- [Descrição](#descrição-📄)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas-🛠️)
+- [Funcionalidades da Aplicação](#funcionalidades-da-aplicação-✨)
+- [Pré Requisitos](#pré-requisitos-✅)
+- [Dockerfile](#dockerfile)
+- [Como Construir a Imagem](#como-construir-a-imagem)
+- [Como Executar](#como-executar-🚀)
+- [Como Contribuir](#como-contribuir-🤝)
+- [Licença](#licença-📄)
+- [Políticas do Kyverno](kyverno.md)
+- [Monitoramento com Prometheus](prometheus.md)
+
 ## Descrição 📄
 
 Este projeto é um gerador de senhas desenvolvido com Python e JavaScript. Ele permite gerar senhas seguras com diferentes opções de personalização.
 
+Substitua `<release_name>` e `<namespace>` pelos valores apropriados para o seu ambiente.
 ## Tecnologias Utilizadas 🛠️
 
 - **Python** 🐍
@@ -98,6 +112,47 @@ task pre-reqs
 
 > DISCLAIMER 1: A task `pre-reqs` foi testada apenas no macOS, mas deve funcionar no Linux também.
 
+## Fazendo o Deploy no Kubernetes
+Para realizar o deploy do monitoramento, das políticas do Kyverno e da aplicação, siga a ordem abaixo:
+
+## Ordem de Deploy
+
+1. **Provisionar o Cluster Kubernetes**
+   ```sh
+   task deploy-k8s-cluster
+   ```
+
+2. **Instalar o Kyverno**
+   ```sh
+   task instalar-kyverno
+   ```
+
+3. **Instalar as Políticas do Kyverno**
+   ```sh
+   task instalar-politicas-kyverno
+   ```
+
+4. **Instalar o Prometheus**
+   ```sh
+   task instalar-prometheus
+   ```
+
+5. **Instalar o Monitoramento da Aplicação**
+   ```sh
+   task instalar-monitoramento
+   ```
+
+6. **Deploy da Aplicação**
+   ```sh
+   task instalar-helm:<release_name>:<namespace>
+   ```
+
+7. **Acessar a Aplicação**
+   ```sh
+   kubectl get ingress -n <namespace>
+   ```
+
+
 ## Dockerfile
 
 Este `Dockerfile` é utilizado para criar uma imagem Docker para o projeto de gerador de senhas. A imagem é baseada em Python e utiliza o Flask para servir a aplicação.
@@ -152,7 +207,7 @@ task build-docker-image:1.0
 
 3. Execute a task de execução do projeto (com Docker Compose):
     ```sh
-    task executar
+    task run
     ```
 
 ## Como Contribuir 🤝

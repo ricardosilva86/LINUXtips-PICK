@@ -1,0 +1,8 @@
+# Default values for politicas-kyverno.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+kyverno:
+  namespaceOverride: "politicas-kyverno"
+  publicKeySecretData: "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFeVZJcHVwZUxOWkYrVE4xb1dZR1VTTnNJb3AzNApaVnZTOHZNa3hpSW9pWG9PS2lHRTFObDRrQnQwalU4TkZ6MUM5MUhmR0NFdTd5WVNNaXJUV29vWWh3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+  publicKeySecretName: cosign-public-key

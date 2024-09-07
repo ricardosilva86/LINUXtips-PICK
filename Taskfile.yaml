@@ -30,7 +30,7 @@ tasks:
   run:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
-      - echo "Iniciando aplicação..."
+      - echo "Iniciando aplicação localmente..."
       - docker compose up -d
 
   stop:
@@ -38,6 +38,53 @@ tasks:
     cmds:
       - echo "Parando aplicação..."
       - docker compose down
+
+  instalar-kyverno:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - echo "Instalando Kyverno..."
+      - kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.11.1/install.yaml
+    preconditions:
+      - sh: sh -c "! kubectl get ns kyverno"
+    silent: true
+
+  instalar-politicas-kyverno:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - echo "Instalando políticas do Kyverno..."
+      - helm uninstall politicas-kyverno --namespace kyverno || true
+      - helm install politicas-kyverno politicas-kyverno/ --namespace kyverno
+
+  instalar-prometheus:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - echo "Instalando a Stack de Monitoramento..."
+      - git clone https://github.com/prometheus-operator/kube-prometheus
+      - kubectl create -f kube-prometheus/manifests/setup
+      - kubectl apply -f kube-prometheus/manifests/
+      - rm -rf kube-prometheus
+    preconditions:
+      - sh: sh -c "! kubectl get ns monitoring"
+    silent: true
+
+  instalar-monitoramento:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - echo "Instalando monitoramento..."
+      - helm uninstall monitoramento --namespace monitoring || true
+      - helm install monitoramento monitoring/
+
+  deploy-k8s-cluster:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - echo "Provisionando cluster Kubernetes..."
+      - doctl kubernetes cluster create desafio-pick --region ams3 --version 1.30.4-do.0  --node-pool "name=nodepool;size=s-2vcpu-4gb;count=3" --1-clicks ingress-nginx
+
+  destroy-k8s-cluster:
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - echo "Destruindo cluster Kubernetes..."
+      - doctl kubernetes cluster delete desafio-pick --force
 
   gerar-env:
     dir: '{{.TASKFILE_DIR}}'
@@ -97,9 +144,8 @@ tasks:
       - sh: docker login -u {{.REGISTRY_USER}} --password-stdin <<< ${DOCKER_TOKEN}
     cmds:
       - task: gerar-chave-cosign
-      - task: build-docker-image:{{.TAG}}
       - echo "Fazendo o push da imagem Docker..."
-      - docker tag {{.IMAGE_NAME}}:{{.TAG}} {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
+      - docker tag {{.IMAGE_NAME}}:{{.TAG}}-amd64 {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
       - docker push {{.REGISTRY_USER}}/{{.IMAGE_NAME}}:{{.TAG}}
       - task: assinar-imagem:{{.TAG}}
 
@@ -107,19 +153,33 @@ tasks:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
       - docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen
+    status:
+      - test -f melange.rsa
 
   melange-build:
     dir: '{{.TASKFILE_DIR}}'
+    deps:
+      - gerar-chave-melange
     cmds:
       - docker run --privileged --rm -v "${PWD}":/work cgr.dev/chainguard/melange build melange.yaml --arch amd64 --signing-key melange.rsa
 
-  apko-build:
+  apko-build:*:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       IMAGE_NAME: '{{index .MATCH 0}}'
       TAG: '{{index .MATCH 1}}'
     cmds:
-      - docker run --rm --workdir /work -v ${PWD}:/work cgr.dev/chainguard/apko build apko.yaml {{.IMAGE_NAME}}:{{.TAG}} {{.IMAGE_NAME}}.tar --arch host
+      - docker run --rm --workdir /work -v ${PWD}:/work cgr.dev/chainguard/apko build apko.yaml {{.IMAGE_NAME}}:{{.TAG}} {{.IMAGE_NAME}}.tar --arch amd64
+      - docker load < {{.IMAGE_NAME}}.tar
+      - task: push-docker-image:{{.TAG}}
+      - task: clean-up:{{.IMAGE_NAME}}
+
+  clean-up:*:
+    dir: '{{.TASKFILE_DIR}}'
+    vars:
+      IMAGE_NAME: '{{index .MATCH 0}}'
+    cmds:
+      - rm -f {{.IMAGE_NAME}}.tar
 
   instalar-helm:*:*:
     dir: '{{.TASKFILE_DIR}}'
@@ -128,6 +188,7 @@ tasks:
       RELEASE_NAMESPACE: '{{index .MATCH 1}}'
       CHART_PATH: 'giropops-senhas-chart'
     cmds:
+      - helm uninstall {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} || true
       - helm install {{.RELEASE_NAME}} --create-namespace --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
 
   atualizar-helm:*:*:
@@ -138,13 +199,6 @@ tasks:
       CHART_PATH: 'giropops-senhas-chart'
     cmds:
       - helm upgrade {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
-
-  configurar-ngrok:
-    dir: '{{.TASKFILE_DIR}}'
-    dotenv: [ .env-ngrok ]
-    cmds:
-      - helm repo add ngrok https://ngrok.github.io/kubernetes-ingress-controller
-      - helm install ngrok-ingress-controller ngrok/kubernetes-ingress-controller --namespace ngrok-ingress-controller --create-namespace --set credentials.apiKey=${NGROK_API_KEY} --set credentials.authtoken=${NGROK_AUTHTOKEN}
 
   empacotar-helm:*:
     dir: '{{.TASKFILE_DIR}}'

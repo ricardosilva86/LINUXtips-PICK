@@ -30,6 +30,15 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
+        - name: blackbox-exporter
+          image: prom/blackbox-exporter:latest
+          ports:
+            - containerPort: 9115
+          args:
+            - "--config.file=/etc/blackbox/blackbox.yml"
+          volumeMounts:
+            - name: blackbox-config
+              mountPath: /etc/blackbox
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}

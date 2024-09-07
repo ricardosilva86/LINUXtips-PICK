@@ -1,12 +1,28 @@
 # values de PRODUÇÃO
 
-replicaCount: 1
+replicaCount: 3
 
 image:
   repository: ricardosilva86/giropops-senhas
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.0-rc2"
+  tag: "1.0-rc5"
+
+redis:
+  enabled: true
+  architecture: standalone
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: false
 
 imagePullSecrets: []
 nameOverride: ""
@@ -24,12 +40,15 @@ serviceAccount:
   name: ""
 
 podAnnotations: {}
-podLabels: {}
+podLabels:
+  app: giropops-senhas
 
 podSecurityContext: {}
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: false
   # capabilities:
   #   drop:
   #   - ALL
@@ -54,17 +73,13 @@ ingress:
   tls:
     - secretName: tls-secret
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+resources:
+  limits:
+   cpu: 100m
+   memory: 128Mi
+  requests:
+   cpu: 100m
+   memory: 128Mi
 
 livenessProbe:
   httpGet:
@@ -83,11 +98,10 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+volumes:
+  - name: blackbox-config
+    configMap:
+      name: blackbox-config
 
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []

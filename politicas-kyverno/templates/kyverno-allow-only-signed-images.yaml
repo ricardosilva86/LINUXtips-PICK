@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: check-image-signature
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: check-signed-images
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      verifyImages:
+        - imageReferences:
+            - "ricardosilva86/giropops-senhas*"
+          attestors:
+            - count: 1
+              entries:
+                - keys:
+                    publicKeys: k8s://{{ .Release.Namespace }}/{{ .Values.kyverno.publicKeySecretName }}

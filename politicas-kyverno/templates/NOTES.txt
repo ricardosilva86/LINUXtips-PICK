@@ -1,0 +1,4 @@
+1. Politicas do Kyverno instaladas com esse Chart:
+    - [x] allow-only-signed-images: Regra que permite apenas imagens assinadas
+    - [x] require-resource: Regra que exige que todos os Pods tenham limits e requests
+    - [x] trusted-registry: Regra que permite apenas imagens de um registry confiável

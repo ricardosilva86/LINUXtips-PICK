@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: giropops-senhas-rule
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    app.kubernetes.io/name: kube-prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+spec:
+  groups:
+    - name: giropops-senhas-rule
+      rules:
+        - alert: GiropopsSenhasDown
+          expr: probe_success{job="giropops-senhas"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Giropops-Senhas caiu"
+            description: "Giropops-Senhas está fora do ar"
