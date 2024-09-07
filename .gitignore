@@ -14,3 +14,5 @@
 /giropops-senhas-chart/charts/redis-20.0.5.tgz
 /sbom-index.spdx.json
 /sbom-x86_64.spdx.json
+/kube-prometheus/
+.DS_Store
