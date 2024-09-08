@@ -181,28 +181,32 @@ tasks:
     cmds:
       - rm -f {{.IMAGE_NAME}}.tar
 
-  instalar-helm:*:*:
+  instalar-helm:*:*:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       RELEASE_NAME: '{{index .MATCH 0}}'
       RELEASE_NAMESPACE: '{{index .MATCH 1}}'
       CHART_PATH: 'giropops-senhas-chart'
+      RELEASE_VERSION: '{{index .MATCH 2}}'
     cmds:
       - helm uninstall {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} || true
-      - helm install {{.RELEASE_NAME}} --create-namespace --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
+      - helm install {{.RELEASE_NAME}} --create-namespace --namespace {{.RELEASE_NAMESPACE}} oci://registry-1.docker.io/$REGISTRY_USER/{{.CHART_PATH}} --version {{.RELEASE_VERSION}}
 
-  atualizar-helm:*:*:
+  atualizar-helm:*:*:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       RELEASE_NAME: '{{index .MATCH 0}}'
       RELEASE_NAMESPACE: '{{index .MATCH 1}}'
       CHART_PATH: 'giropops-senhas-chart'
+      CHART_VERSION: '{{index .MATCH 2}}'
     cmds:
-      - helm upgrade {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} ./{{.CHART_PATH}}
+      - helm upgrade {{.RELEASE_NAME}} --namespace {{.RELEASE_NAMESPACE}} oci://registry-1.docker.io/$REGISTRY_USER/{{.CHART_PATH}} --version {{.CHART_VERSION}}
 
-  empacotar-helm:*:
+  publicar-helm:*:
     dir: '{{.TASKFILE_DIR}}'
     vars:
       CHART_PATH: '{{index .MATCH 0}}'
     cmds:
       - helm package {{.CHART_PATH}}
+      - helm push {{.CHART_PATH}}*.tgz oci://registry-1.docker.io/$REGISTRY_USER/
+      - rm -f {{.CHART_PATH}}*.tgz
